@@ -18,7 +18,9 @@ print("STARTING QUANTITATIVE LSTM ENGINE PURE PIPELINE")
 print("="*60)
 
 # 2. Ingest Real Financial Market Volatility Data
-TICKER = "AAPL"  # Can be changed to NVDA, TSLA, or BTC-USD
+# 2. Ingest Real Financial Market Volatility Data
+user_input = input("Enter target ticker (e.g., NVDA, BTC-USD, META) or press Enter for AAPL: ").strip().upper()
+TICKER = user_input if user_input else "AAPL"
 START_DATE = "2020-01-01"
 END_DATE = "2026-01-01"
 

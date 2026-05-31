@@ -27,13 +27,9 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         }
 
-        .neon-glow-cyan {
-            text-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
-        }
-
-        .mono-font {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .neon-glow-cyan { text-shadow: 0 0 20px rgba(6, 182, 212, 0.6); }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        input::placeholder { color: #475569; }
     </style>
 </head>
 <body class="p-4 md:p-12 flex flex-col items-center justify-center">
@@ -44,112 +40,121 @@
             <div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-3xl font-extrabold tracking-tight text-white">QUANT<span class="text-cyan-400 neon-glow-cyan">LSTM</span></h1>
-                    <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mono-font">v2.0.4-PROD</span>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mono-font">STATIONARY-V3</span>
                 </div>
-                <p class="text-sm text-slate-400 mt-1">Deep Learning Recurrent Time-Series Forecasting Asset Pipeline</p>
+                <p class="text-sm text-slate-400 mt-1">Multivariate Log Return Inference Engine</p>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <span class="text-xs block text-slate-500 tracking-wider font-bold uppercase">Target Security</span>
-                    <span id="tickerDisplay" class="text-lg font-bold text-emerald-400 mono-font">LOADING...</span>
-                </div>
-                <div class="h-8 w-[1px] bg-slate-800"></div>
-                <div class="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold tracking-wider flex items-center gap-2">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    ACTIVE INFERENCE ENGINE
-                </div>
+            
+            <div class="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-slate-700/50">
+                <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g. TSLA)" class="bg-transparent px-3 py-2 text-white outline-none font-bold uppercase w-48 text-sm" onkeypress="handleKeyPress(event)">
+                <button id="predictBtn" onclick="runPrediction()" class="bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 text-cyan-300 px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                    ANALYZE
+                </button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="glass-container rounded-2xl p-5">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Model Evaluation Loss (RMSE)</span>
-                <span id="rmseDisplay" class="text-3xl font-bold text-white tracking-tight block mt-2 mono-font">--</span>
-                <p class="text-xs text-slate-500 mt-1">Absolute scaling error deviation in currency units</p>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Active Security</span>
+                <span id="tickerDisplay" class="text-3xl font-bold text-white tracking-tight block mt-2 mono-font">--</span>
             </div>
             <div class="glass-container rounded-2xl p-5">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Neural Architecture Baseline</span>
-                <span class="text-xl font-bold text-white tracking-tight block mt-2">Stacked LSTM Layer</span>
-                <p class="text-xs text-slate-400 mt-1">Hidden Features: <span class="text-cyan-400 mono-font">128</span> | Input Lookback: <span class="text-cyan-400 mono-font">50d</span></p>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Statistical Return Variance (RMSE)</span>
+                <span id="rmseDisplay" class="text-3xl font-bold text-rose-400 tracking-tight block mt-2 mono-font">--</span>
             </div>
             <div class="glass-container rounded-2xl p-5">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Execution Deployment Target</span>
-                <span class="text-xl font-bold text-sky-400 tracking-tight block mt-2">Static GitHub Pages</span>
-                <p class="text-xs text-slate-500 mt-1">Decoupled continuous deployment compilation</p>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">System Status</span>
+                <span id="statusDisplay" class="text-xl font-bold text-emerald-400 tracking-tight block mt-2 animate-pulse">AWAITING INPUT</span>
             </div>
         </div>
 
-        <main class="glass-container rounded-3xl p-6 w-full h-[520px]">
+        <main class="glass-container rounded-3xl p-6 w-full h-[520px] relative">
             <canvas id="productionTerminalChart"></canvas>
         </main>
         
     </div>
 
     <script>
-        async function fetchAnalyticsPayload() {
+        let quantChart = null; 
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') runPrediction();
+        }
+
+        async function runPrediction() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase().trim();
+            if (!ticker) return;
+
+            const btn = document.getElementById('predictBtn');
+            const status = document.getElementById('statusDisplay');
+            
+            btn.innerHTML = `TRAINING... <span class="animate-spin text-lg">⚙</span>`;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            status.innerText = "OPTIMIZING NEURAL NET...";
+            status.className = "text-xl font-bold text-amber-400 tracking-tight block mt-2 animate-pulse";
+
             try {
-                const response = await fetch('./data/predictions.json');
-                if (!response.ok) throw new Error("Artifact payload file missing.");
+                const response = await fetch(`http://127.0.0.1:8000/predict/${ticker}`);
+                if (!response.ok) throw new Error("Ticker not found or API offline.");
+                
                 const payload = await response.json();
                 
-                // Update Metadata Displays
-                document.getElementById('tickerDisplay').innerText = `${payload.ticker} / USD`;
-                document.getElementById('rmseDisplay').innerText = `$${payload.rmse}`;
+                document.getElementById('tickerDisplay').innerText = `${payload.ticker}`;
+                // Convert decimal RMSE to a readable percentage format
+                document.getElementById('rmseDisplay').innerText = `± ${(payload.rmse * 100).toFixed(2)}%`;
+                status.innerText = "INFERENCE COMPLETE";
+                status.className = "text-xl font-bold text-emerald-400 tracking-tight block mt-2";
 
-                // Construct timeline indexes
-                const temporalLabels = Array.from({length: payload.historical.length}, (_, index) => `Trading Day ${index + 1}`);
+                // Build the timeline using the actual calendar dates sent from Python
+const temporalLabels = payload.dates;
+temporalLabels.push("🔮 TOMORROW");
 
                 const ctx = document.getElementById('productionTerminalChart').getContext('2d');
-                
-                // Set chart rendering defaults
                 Chart.defaults.color = '#94a3b8';
                 Chart.defaults.font.family = 'JetBrains Mono';
 
-                new Chart(ctx, {
+                if (quantChart) quantChart.destroy(); 
+
+                quantChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: temporalLabels,
                         datasets: [
                             {
-                                label: 'Historical Real Market Close',
+                                label: 'Historical Close',
                                 data: payload.historical,
-                                borderColor: '#06b6d4', // Premium Cyan
+                                borderColor: '#06b6d4',
                                 borderWidth: 2,
                                 pointRadius: 0,
-                                hoverRadius: 4,
                                 tension: 0.15
                             },
                             {
-                                label: 'LSTM Testing Validation Segment',
+                               
+                                label: 'Model Prediction (Reconstructed)',
                                 data: payload.predictions,
-                                borderColor: '#f43f5e', // Hot Vibrant Rose
+                                borderColor: '#f43f5e',
                                 borderDash: [4, 4],
                                 borderWidth: 2.5,
-                                pointRadius: 0,
-                                hoverRadius: 4,
+                                // === NEW: DYNAMIC DOT HIGHLIGHTING ===
+                                pointRadius: (ctx) => {
+                                    // If it is the absolute last point (Tomorrow), make it huge. Otherwise, hide it.
+                                    return ctx.dataIndex === ctx.dataset.data.length - 1 ? 8 : 0;
+                                },
+                                pointBackgroundColor: '#f43f5e', // Pink fill
+                                pointBorderColor: '#ffffff',     // White ring
+                                pointBorderWidth: 2,
+                                pointHoverRadius: 12,            // Expand when mouse is near
+                                // =====================================
                                 tension: 0.15
                             }
+                            
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         interaction: { intersect: false, mode: 'index' },
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: { font: { size: 12, weight: '600' }, boxWidth: 16, padding: 20 }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                titleFont: { size: 13, bold: true },
-                                bodyFont: { size: 12 },
-                                padding: 12,
-                                borderRadius: 8,
-                                borderColor: 'rgba(255,255,255,0.1)',
-                                borderWidth: 1
-                            }
-                        },
+                        plugins: { legend: { position: 'top', labels: { font: { size: 12, weight: '600' } } } },
                         scales: {
                             x: { grid: { color: 'rgba(255, 255, 255, 0.03)' }, ticks: { maxTicksLimit: 12 } },
                             y: { grid: { color: 'rgba(255, 255, 255, 0.03)' }, ticks: { callback: value => '$' + value } }
@@ -158,14 +163,16 @@
                 });
 
             } catch (error) {
-                console.error("Pipeline breakdown initialization fault:", error);
-                document.getElementById('tickerDisplay').innerText = "ERROR LOADING DATA";
-                document.getElementById('tickerDisplay').classList.remove('text-emerald-400');
-                document.getElementById('tickerDisplay').classList.add('text-rose-500');
+                console.error("Pipeline fault:", error);
+                document.getElementById('tickerDisplay').innerText = "ERROR";
+                document.getElementById('rmseDisplay').innerText = "--";
+                status.innerText = "DATA FETCH FAILED";
+                status.className = "text-xl font-bold text-rose-500 tracking-tight block mt-2";
+            } finally {
+                btn.innerHTML = "ANALYZE";
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
-        
-        document.addEventListener("DOMContentLoaded", fetchAnalyticsPayload);
     </script>
 </body>
 </html>
