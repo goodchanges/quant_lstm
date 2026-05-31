@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quant LSTM Neural Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        body {
+            background-color: #030712;
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.15) 0px, transparent 40%),
+                radial-gradient(at 90% 10%, rgba(244, 63, 94, 0.15) 0px, transparent 40%),
+                radial-gradient(at 50% 80%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        .glass-container {
+            background: rgba(17, 24, 39, 0.45);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .neon-glow-cyan {
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+        }
+
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12 flex flex-col items-center justify-center">
+
+    <div class="w-full max-w-6xl space-y-6">
+        
+        <header class="glass-container rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl font-extrabold tracking-tight text-white">QUANT<span class="text-cyan-400 neon-glow-cyan">LSTM</span></h1>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mono-font">v2.0.4-PROD</span>
+                </div>
+                <p class="text-sm text-slate-400 mt-1">Deep Learning Recurrent Time-Series Forecasting Asset Pipeline</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <span class="text-xs block text-slate-500 tracking-wider font-bold uppercase">Target Security</span>
+                    <span id="tickerDisplay" class="text-lg font-bold text-emerald-400 mono-font">LOADING...</span>
+                </div>
+                <div class="h-8 w-[1px] bg-slate-800"></div>
+                <div class="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold tracking-wider flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    ACTIVE INFERENCE ENGINE
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-container rounded-2xl p-5">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Model Evaluation Loss (RMSE)</span>
+                <span id="rmseDisplay" class="text-3xl font-bold text-white tracking-tight block mt-2 mono-font">--</span>
+                <p class="text-xs text-slate-500 mt-1">Absolute scaling error deviation in currency units</p>
+            </div>
+            <div class="glass-container rounded-2xl p-5">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Neural Architecture Baseline</span>
+                <span class="text-xl font-bold text-white tracking-tight block mt-2">Stacked LSTM Layer</span>
+                <p class="text-xs text-slate-400 mt-1">Hidden Features: <span class="text-cyan-400 mono-font">128</span> | Input Lookback: <span class="text-cyan-400 mono-font">50d</span></p>
+            </div>
+            <div class="glass-container rounded-2xl p-5">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Execution Deployment Target</span>
+                <span class="text-xl font-bold text-sky-400 tracking-tight block mt-2">Static GitHub Pages</span>
+                <p class="text-xs text-slate-500 mt-1">Decoupled continuous deployment compilation</p>
+            </div>
+        </div>
+
+        <main class="glass-container rounded-3xl p-6 w-full h-[520px]">
+            <canvas id="productionTerminalChart"></canvas>
+        </main>
+        
+    </div>
+
+    <script>
+        async function fetchAnalyticsPayload() {
+            try {
+                const response = await fetch('./data/predictions.json');
+                if (!response.ok) throw new Error("Artifact payload file missing.");
+                const payload = await response.json();
+                
+                // Update Metadata Displays
+                document.getElementById('tickerDisplay').innerText = `${payload.ticker} / USD`;
+                document.getElementById('rmseDisplay').innerText = `$${payload.rmse}`;
+
+                // Construct timeline indexes
+                const temporalLabels = Array.from({length: payload.historical.length}, (_, index) => `Trading Day ${index + 1}`);
+
+                const ctx = document.getElementById('productionTerminalChart').getContext('2d');
+                
+                // Set chart rendering defaults
+                Chart.defaults.color = '#94a3b8';
+                Chart.defaults.font.family = 'JetBrains Mono';
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: temporalLabels,
+                        datasets: [
+                            {
+                                label: 'Historical Real Market Close',
+                                data: payload.historical,
+                                borderColor: '#06b6d4', // Premium Cyan
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                hoverRadius: 4,
+                                tension: 0.15
+                            },
+                            {
+                                label: 'LSTM Testing Validation Segment',
+                                data: payload.predictions,
+                                borderColor: '#f43f5e', // Hot Vibrant Rose
+                                borderDash: [4, 4],
+                                borderWidth: 2.5,
+                                pointRadius: 0,
+                                hoverRadius: 4,
+                                tension: 0.15
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { font: { size: 12, weight: '600' }, boxWidth: 16, padding: 20 }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleFont: { size: 13, bold: true },
+                                bodyFont: { size: 12 },
+                                padding: 12,
+                                borderRadius: 8,
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.03)' }, ticks: { maxTicksLimit: 12 } },
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.03)' }, ticks: { callback: value => '$' + value } }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Pipeline breakdown initialization fault:", error);
+                document.getElementById('tickerDisplay').innerText = "ERROR LOADING DATA";
+                document.getElementById('tickerDisplay').classList.remove('text-emerald-400');
+                document.getElementById('tickerDisplay').classList.add('text-rose-500');
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", fetchAnalyticsPayload);
+    </script>
+</body>
+</html>
