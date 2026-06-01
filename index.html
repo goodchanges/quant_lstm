@@ -94,7 +94,7 @@
             status.className = "text-xl font-bold text-amber-400 tracking-tight block mt-2 animate-pulse";
 
             try {
-                const response = await fetch(`https://quant-lstm.onrender.com/predict/${ticker}`);
+                const response = await fetch(`http://127.0.0.1:8000/predict/${ticker}`);
                 if (!response.ok) throw new Error("Ticker not found or API offline.");
                 
                 const payload = await response.json();
