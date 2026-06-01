@@ -46,26 +46,31 @@ def run_quant_engine(ticker: str):
         
         # Fetch data dynamically using today's exact date
         # === STEALTH MODE: Full Browser Spoofing ===
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1",
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "none",
-            "Sec-Fetch-User": "?1",
-            "Cache-Control": "max-age=0"
-        })
-        
-        stock = yf.Ticker(ticker.upper(), session=session)
-        df = stock.history(start=four_years_ago.strftime('%Y-%m-%d'), end=tomorrow.strftime('%Y-%m-%d'))
+        # === REDUNDANT DATA PIPELINE: Bypassing Cloud IP Bans ===
+        try:
+            # Primary Engine: Yahoo Finance
+            session = requests.Session()
+            session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'})
+            stock = yf.Ticker(ticker.upper(), session=session)
+            df = stock.history(start=four_years_ago.strftime('%Y-%m-%d'), end=tomorrow.strftime('%Y-%m-%d'))
             
-        if df.empty:
-            raise HTTPException(status_code=404, detail="Ticker not found or delisted.")
+            if df.empty:
+                raise ValueError("Yahoo returned empty data.")
+                
+        except Exception as e:
+            # Fallback Engine: Stooq Financial Database (Immune to Yahoo IP bans)
+            print("Yahoo API Blocked (Datacenter IP Ban). Engaging Stooq Fallback Engine...")
+            stooq_url = f"https://stooq.com/q/d/l/?s={ticker.upper()}.US&i=d"
+            df = pd.read_csv(stooq_url, index_col='Date', parse_dates=True)
+            
+            # Standardize timezone and slice to our 4-year dynamic window
+            if df.index.tz is not None:
+                df.index = df.index.tz_localize(None)
+            df = df.loc[four_years_ago.strftime('%Y-%m-%d'):]
+            
+            if df.empty or 'Close' not in df.columns:
+                raise HTTPException(status_code=404, detail="Ticker not found in Primary or Fallback databases.")
+        # ========================================================
             
         # 2. MIT-GRADE MATH: Engineer Stationary Features
         df['Log_Return'] = np.log(df['Close'] / df['Close'].shift(1))
