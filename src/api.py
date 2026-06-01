@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
 import torch
+import requests
 import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 import yfinance as yf
@@ -44,7 +45,13 @@ def run_quant_engine(ticker: str):
         four_years_ago = today - timedelta(days=4*365)
         
         # Fetch data dynamically using today's exact date
-        stock = yf.Ticker(ticker.upper())
+        # === STEALTH MODE: Bypassing Yahoo's Cloud Firewall ===
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        })
+        
+        stock = yf.Ticker(ticker.upper(), session=session)
         df = stock.history(start=four_years_ago.strftime('%Y-%m-%d'), end=tomorrow.strftime('%Y-%m-%d'))
             
         if df.empty:
